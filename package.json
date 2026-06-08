@@ -1,0 +1,18 @@
+{
+  "name": "tool-kit",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "wasm:build": "wasm-pack build wasm --target bundler --out-dir ../src/wasm/pkg --out-name toolkit",
+    "dev": "npm run wasm:build && vite",
+    "build": "npm run wasm:build && tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0"
+  }
+}

@@ -1,0 +1,22 @@
+[package]
+name = "tool-kit-wasm"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp", "tiff"] }
+imageproc = { version = "0.25", default-features = false }
+ab_glyph = "0.2"
+zenwebp = { version = "0.3", default-features = false, features = ["std"] }
+usvg = { version = "0.47.0", default-features = false }
+texture_packer = { version = "0.30.0", default-features = false, features = ["png"] }
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
+js-sys = "0.3.99"
+
+[profile.release]
+opt-level = "s"
+lto = true
