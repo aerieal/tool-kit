@@ -53,6 +53,7 @@ export class ImageEditor {
 
   private activeHandle: HandleId | null = null;
   private dragStartImage = { x: 0, y: 0 };
+  private dragStartScreen = { x: 0, y: 0 };
   private dragStartCrop: CropRect = { x: 0, y: 0, w: 0, h: 0 };
   private dragStartRotation = 0;
   private aspectLock = false;
@@ -161,13 +162,26 @@ export class ImageEditor {
     const { w: cw, h: ch } = this.crop;
     if (cw <= 0 || ch <= 0) return;
 
-    const outW = this.outputWidth ?? cw;
-    const outH = this.outputHeight ?? ch;
+    const rad = (this.rotation * Math.PI) / 180;
+    const sin = Math.abs(Math.sin(rad));
+    const cos = Math.abs(Math.cos(rad));
+    const rotW = Math.ceil(cw * cos + ch * sin);
+    const rotH = Math.ceil(cw * sin + ch * cos);
+
+    const outW = this.outputWidth ?? rotW;
+    const outH = this.outputHeight ?? rotH;
     const dpr = window.devicePixelRatio || 1;
     target.width = Math.max(1, Math.round(outW * dpr));
     target.height = Math.max(1, Math.round(outH * dpr));
-    target.style.width = `${outW}px`;
-    target.style.height = `${outH}px`;
+
+    const { displayW, displayH } = this.computePreviewDisplaySize(
+      outW,
+      outH,
+      target.parentElement,
+    );
+    target.style.width = `${displayW}px`;
+    target.style.height = `${displayH}px`;
+
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, outW, outH);
 
@@ -188,12 +202,6 @@ export class ImageEditor {
       cw,
       ch,
     );
-
-    const rad = (this.rotation * Math.PI) / 180;
-    const sin = Math.abs(Math.sin(rad));
-    const cos = Math.abs(Math.cos(rad));
-    const rotW = cw * cos + ch * sin;
-    const rotH = cw * sin + ch * cos;
 
     const rotCanvas = document.createElement("canvas");
     rotCanvas.width = Math.ceil(rotW);
@@ -242,6 +250,23 @@ export class ImageEditor {
     this.centerY = h / 2;
 
     this.draw();
+    this.drawPreviewThrottled();
+  }
+
+  private computePreviewDisplaySize(
+    outW: number,
+    outH: number,
+    frame: HTMLElement | null,
+  ): { displayW: number; displayH: number } {
+    const padding = 16;
+    const maxHeight = 240;
+    const availW = frame ? Math.max(1, frame.clientWidth - padding) : outW;
+    const availH = Math.max(1, maxHeight - padding);
+    const scale = Math.min(1, availW / outW, availH / outH);
+    return {
+      displayW: Math.max(1, Math.round(outW * scale)),
+      displayH: Math.max(1, Math.round(outH * scale)),
+    };
   }
 
   private draw(): void {
@@ -257,37 +282,50 @@ export class ImageEditor {
     if (!this.image) return;
 
     const rad = (this.rotation * Math.PI) / 180;
+    const ccx = this.crop.x + this.crop.w / 2;
+    const ccy = this.crop.y + this.crop.h / 2;
+    const cropScreen = this.cropToScreen();
 
     ctx.save();
     ctx.translate(this.centerX, this.centerY);
-    ctx.rotate(rad);
     ctx.scale(this.scale, this.scale);
     ctx.translate(-this.iw / 2, -this.ih / 2);
     ctx.drawImage(this.image, 0, 0);
     ctx.restore();
 
     ctx.save();
-    ctx.translate(this.centerX, this.centerY);
-    ctx.rotate(rad);
-    ctx.scale(this.scale, this.scale);
-    ctx.translate(-this.iw / 2, -this.ih / 2);
-
     ctx.fillStyle = `rgba(0, 0, 0, ${OVERLAY_ALPHA})`;
-    ctx.fillRect(0, 0, this.iw, this.ih);
+    ctx.fillRect(0, 0, w, h);
     ctx.globalCompositeOperation = "destination-out";
-    ctx.fillRect(this.crop.x, this.crop.y, this.crop.w, this.crop.h);
+    ctx.fillRect(cropScreen.x, cropScreen.y, cropScreen.w, cropScreen.h);
     ctx.globalCompositeOperation = "source-over";
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cropScreen.x, cropScreen.y, cropScreen.w, cropScreen.h);
+    ctx.clip();
+    ctx.save();
+    ctx.translate(this.centerX, this.centerY);
+    ctx.scale(this.scale, this.scale);
+    ctx.translate(ccx, ccy);
+    ctx.rotate(rad);
+    ctx.translate(-ccx, -ccy);
+    ctx.translate(-this.iw / 2, -this.ih / 2);
+    ctx.drawImage(this.image, 0, 0);
+    ctx.restore();
+    ctx.restore();
 
     ctx.strokeStyle = "#0b57d0";
-    ctx.lineWidth = 2 / this.scale;
+    ctx.lineWidth = 2;
     ctx.setLineDash([]);
-    ctx.strokeRect(this.crop.x, this.crop.y, this.crop.w, this.crop.h);
+    ctx.strokeRect(cropScreen.x, cropScreen.y, cropScreen.w, cropScreen.h);
 
-    ctx.setLineDash([6 / this.scale, 4 / this.scale]);
+    ctx.setLineDash([6, 4]);
     ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.lineWidth = 1 / this.scale;
-    ctx.strokeRect(this.crop.x, this.crop.y, this.crop.w, this.crop.h);
-    ctx.restore();
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cropScreen.x, cropScreen.y, cropScreen.w, cropScreen.h);
+    ctx.setLineDash([]);
 
     this.drawHandles();
     this.drawRotationHandle();
@@ -310,13 +348,9 @@ export class ImageEditor {
   }
 
   private drawRotationHandle(): void {
-    const top = { x: this.crop.x + this.crop.w / 2, y: this.crop.y };
-    const rot = {
-      x: top.x,
-      y: top.y - ROT_HANDLE_OFFSET / this.scale,
-    };
-    const topS = this.imageToScreen(top.x, top.y);
-    const rotS = this.imageToScreen(rot.x, rot.y);
+    const cropScreen = this.cropToScreen();
+    const topS = { x: cropScreen.x + cropScreen.w / 2, y: cropScreen.y };
+    const rotS = { x: topS.x, y: topS.y - ROT_HANDLE_OFFSET };
 
     this.ctx.beginPath();
     this.ctx.moveTo(topS.x, topS.y);
@@ -334,30 +368,31 @@ export class ImageEditor {
     this.ctx.stroke();
   }
 
-  private imageToScreen(ix: number, iy: number): { x: number; y: number } {
-    const rad = (this.rotation * Math.PI) / 180;
-    const dx = ix - this.iw / 2;
-    const dy = iy - this.ih / 2;
-    const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
-    const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+  private cropToScreen(): { x: number; y: number; w: number; h: number } {
     return {
-      x: this.centerX + rx * this.scale,
-      y: this.centerY + ry * this.scale,
+      x: this.centerX + (this.crop.x - this.iw / 2) * this.scale,
+      y: this.centerY + (this.crop.y - this.ih / 2) * this.scale,
+      w: this.crop.w * this.scale,
+      h: this.crop.h * this.scale,
+    };
+  }
+
+  private imageToScreen(ix: number, iy: number): { x: number; y: number } {
+    return {
+      x: this.centerX + (ix - this.iw / 2) * this.scale,
+      y: this.centerY + (iy - this.ih / 2) * this.scale,
     };
   }
 
   private screenToImage(sx: number, sy: number): { x: number; y: number } {
-    const rad = (-this.rotation * Math.PI) / 180;
-    const rx = (sx - this.centerX) / this.scale;
-    const ry = (sy - this.centerY) / this.scale;
-    const dx = rx * Math.cos(rad) - ry * Math.sin(rad);
-    const dy = rx * Math.sin(rad) + ry * Math.cos(rad);
-    return { x: dx + this.iw / 2, y: dy + this.ih / 2 };
+    return {
+      x: (sx - this.centerX) / this.scale + this.iw / 2,
+      y: (sy - this.centerY) / this.scale + this.ih / 2,
+    };
   }
 
   private hitTest(sx: number, sy: number): HandleId | null {
-    const rot = this.rotationHandleImagePos();
-    const rotS = this.imageToScreen(rot.x, rot.y);
+    const rotS = this.rotationHandleScreenPos();
     if (dist(sx, sy, rotS.x, rotS.y) <= HANDLE_RADIUS + 6) return "rotate";
 
     const handles: { id: HandleId; x: number; y: number }[] = [
@@ -389,10 +424,11 @@ export class ImageEditor {
     return null;
   }
 
-  private rotationHandleImagePos(): { x: number; y: number } {
+  private rotationHandleScreenPos(): { x: number; y: number } {
+    const cropScreen = this.cropToScreen();
     return {
-      x: this.crop.x + this.crop.w / 2,
-      y: this.crop.y - ROT_HANDLE_OFFSET / this.scale,
+      x: cropScreen.x + cropScreen.w / 2,
+      y: cropScreen.y - ROT_HANDLE_OFFSET,
     };
   }
 
@@ -409,6 +445,7 @@ export class ImageEditor {
 
     this.activeHandle = handle;
     this.dragStartImage = this.screenToImage(pos.x, pos.y);
+    this.dragStartScreen = { ...pos };
     this.dragStartCrop = { ...this.crop };
     this.dragStartRotation = this.rotation;
     this.canvas.setPointerCapture(e.pointerId);
@@ -442,11 +479,14 @@ export class ImageEditor {
         this.ih,
       );
     } else if (this.activeHandle === "rotate") {
-      const cx = this.crop.x + this.crop.w / 2;
-      const cy = this.crop.y + this.crop.h / 2;
-      const start = this.dragStartImage;
-      const a0 = Math.atan2(start.y - cy, start.x - cx);
-      const a1 = Math.atan2(current.y - cy, current.x - cx);
+      const cropScreen = this.cropToScreen();
+      const cx = cropScreen.x + cropScreen.w / 2;
+      const cy = cropScreen.y + cropScreen.h / 2;
+      const a0 = Math.atan2(
+        this.dragStartScreen.y - cy,
+        this.dragStartScreen.x - cx,
+      );
+      const a1 = Math.atan2(pos.y - cy, pos.x - cx);
       this.rotation = normalizeAngle(
         this.dragStartRotation + ((a1 - a0) * 180) / Math.PI,
       );

@@ -1,0 +1,106 @@
+/* Buttons — MD3 filled / outlined */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.actions button,
+.btn {
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  min-height: 2.5rem;
+  padding: 0.625rem var(--space-6);
+  border: none;
+  border-radius: var(--shape-full);
+  cursor: pointer;
+  transition:
+    background var(--motion-short),
+    box-shadow var(--motion-short),
+    color var(--motion-short);
+}
+
+.actions button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--elevation-1);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: var(--elevation-2);
+  filter: brightness(1.05);
+}
+
+.btn-primary:active:not(:disabled) {
+  box-shadow: none;
+}
+
+.btn-primary:disabled {
+  background: color-mix(in srgb, var(--on-surface) 12%, var(--surface));
+  color: color-mix(in srgb, var(--on-surface) 38%, transparent);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--outline);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--state-hover);
+  border-color: var(--primary);
+}
+
+.btn-secondary:disabled {
+  color: color-mix(in srgb, var(--on-surface) 38%, transparent);
+  border-color: var(--outline-variant);
+  cursor: not-allowed;
+}
+
+.row-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.row-actions .btn-primary,
+.row-actions .btn-secondary {
+  width: auto;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: -0.2em;
+  margin-right: var(--space-2);
+}
+
+.btn.is-loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.btn.is-loading .spinner {
+  opacity: 0.9;
+}

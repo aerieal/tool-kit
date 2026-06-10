@@ -4,8 +4,10 @@ mod edit;
 mod encode;
 mod js_input;
 mod placeholder;
+mod rasterize;
 mod sprite;
 mod svg;
+mod svg_common;
 
 use image::imageops::FilterType as ResizeFilter;
 use image::GenericImageView;
@@ -14,6 +16,7 @@ use wasm_bindgen::prelude::*;
 pub use batch::batch_process_to_zip;
 pub use edit::apply_image_edit;
 pub use placeholder::generate_placeholder;
+pub use rasterize::{rasterize_svg, SvgRasterResult};
 pub use sprite::{generate_css_sprite, SpriteSheetResult};
 pub use svg::optimize_svg;
 

@@ -1,0 +1,132 @@
+/**
+ * tool-kit Design System — Tokens
+ * Material Design 3–inspired, 4px base grid
+ */
+:root {
+  /* ── Typography ── */
+  --font-sans: "Noto Sans JP", system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, monospace;
+
+  --text-xs: 0.6875rem;   /* 11px */
+  --text-sm: 0.8125rem;   /* 13px */
+  --text-base: 0.875rem;  /* 14px */
+  --text-md: 1rem;        /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.375rem;    /* 22px */
+  --text-2xl: 1.5rem;     /* 24px */
+
+  --leading-tight: 1.27;
+  --leading-snug: 1.33;
+  --leading-normal: 1.43;
+  --leading-relaxed: 1.5;
+  --leading-loose: 1.55;
+
+  --tracking-tight: 0;
+  --tracking-normal: 0.01em;
+  --tracking-wide: 0.04em;
+  --tracking-label: 0.006em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 700;
+
+  /* ── Spacing (4px grid) ── */
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* Semantic spacing */
+  --gap-section: var(--space-5);
+  --gap-block: var(--space-4);
+  --gap-inline: var(--space-3);
+  --gap-tight: var(--space-2);
+  --padding-page-x: var(--space-4);
+  --padding-page-y: var(--space-6);
+  --padding-page-bottom: var(--space-12);
+  --padding-card: var(--space-5);
+  --padding-card-sm: var(--space-4);
+
+  /* ── Color — Primary ── */
+  --primary: #0b57d0;
+  --on-primary: #ffffff;
+  --primary-container: #d3e3fd;
+  --on-primary-container: #041e49;
+
+  /* ── Color — Surface ── */
+  --surface: #fdfcff;
+  --surface-dim: #f8f9fa;
+  --surface-container-low: #f3f6fc;
+  --surface-container: #eef2f8;
+  --surface-container-high: #e8edf4;
+
+  /* ── Color — On-surface ── */
+  --on-surface: #1a1c1e;
+  --on-surface-variant: #44474e;
+  --outline: #74777f;
+  --outline-variant: #c4c7cf;
+
+  /* ── Color — Semantic ── */
+  --error: #b3261e;
+  --error-container: #f9dedc;
+  --on-error-container: #410e0b;
+  --success: #146c2e;
+  --warning: #7d5700;
+
+  /* ── Color — State overlays ── */
+  --state-hover: rgb(11 87 208 / 0.08);
+  --state-focus: rgb(11 87 208 / 0.12);
+  --state-pressed: rgb(11 87 208 / 0.12);
+
+  /* ── Shape ── */
+  --shape-xs: 4px;
+  --shape-sm: 8px;
+  --shape-md: 12px;
+  --shape-lg: 16px;
+  --shape-xl: 28px;
+  --shape-full: 9999px;
+
+  /* ── Elevation ── */
+  --elevation-1: 0 1px 2px rgb(26 28 30 / 0.06), 0 1px 3px rgb(26 28 30 / 0.1);
+  --elevation-2: 0 2px 6px rgb(26 28 30 / 0.08), 0 1px 2px rgb(26 28 30 / 0.06);
+
+  /* ── Layout ── */
+  --header-h: 3.5rem;
+  --nav-h: 3rem;
+  --sidebar-w: 15.5rem;
+  --content-max: 44rem;
+  --content-max-editor: 64rem;
+  --content-max-wide: 52rem;
+
+  /* ── Motion ── */
+  --motion-short: 150ms cubic-bezier(0.2, 0, 0, 1);
+  --motion-medium: 250ms cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── Z-index ── */
+  --z-header: 20;
+  --z-nav: 10;
+  --z-toast: 50;
+  --z-skip: 100;
+}
+
+@media (min-width: 600px) {
+  :root {
+    --padding-page-x: var(--space-6);
+    --padding-page-y: var(--space-8);
+    --gap-section: var(--space-6);
+  }
+}
+
+@media (min-width: 900px) {
+  :root {
+    --padding-page-x: var(--space-8);
+    --content-max: 44rem;
+  }
+}

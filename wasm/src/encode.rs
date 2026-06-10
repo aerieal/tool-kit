@@ -60,7 +60,14 @@ fn encode_webp(img: &DynamicImage, quality: u8, out: &mut Vec<u8>) -> Result<(),
         return Ok(());
     }
 
-    let config = LossyConfig::new().with_quality(quality as f32);
+    // Default zenwebp tuning (SNS + loop filter + method 4 psycho-visual) can tint or
+    // soften colors at higher quality settings. Keep lossy output faithful to input RGB.
+    let config = LossyConfig::new()
+        .with_quality(quality as f32)
+        .with_method(2)
+        .with_sns_strength(0)
+        .with_filter_strength(0)
+        .with_segments(1);
     let webp = EncodeRequest::lossy(&config, rgba.as_raw(), PixelLayout::Rgba8, w, h)
         .encode()
         .map_err(|e| JsValue::from_str(&format!("webp lossy encode: {e}")))?;
@@ -73,5 +80,32 @@ pub fn extension_for_format(format: &str) -> Result<&'static str, JsValue> {
         TargetFormat::WebP => Ok("webp"),
         TargetFormat::Png => Ok("png"),
         TargetFormat::Jpeg => Ok("jpg"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::TargetFormat;
+    use image::{ImageBuffer, Rgba};
+
+    #[test]
+    fn webp_lossy_preserves_color_at_high_quality() {
+        let img: ImageBuffer<Rgba<u8>, Vec<u8>> =
+            ImageBuffer::from_pixel(64, 64, Rgba([200, 100, 50, 255]));
+        let dynamic = DynamicImage::ImageRgba8(img);
+
+        let bytes = encode_image(&dynamic, TargetFormat::WebP, 80).expect("encode webp");
+        let decoded = image::load_from_memory(&bytes)
+            .expect("decode webp")
+            .to_rgba8();
+        let center = decoded.get_pixel(32, 32).0;
+
+        for (actual, expected) in center.iter().zip([200u8, 100, 50, 255]) {
+            assert!(
+                (*actual as i16 - expected as i16).abs() <= 12,
+                "channel drift too large: got {center:?}, expected [200, 100, 50, 255]"
+            );
+        }
     }
 }
