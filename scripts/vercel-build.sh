@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
-# Vercel の Node ビルドイメージには Rust / wasm-pack が含まれないため、
-# 本番ビルド前に最小限のツールチェーンをセットアップする。
+# Vercel / CI 向け: Rust + wasm-pack を用意してからフロントをビルドする。
+# ローカルではツールチェーンが既にあればインストールをスキップする。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+if [ -f "$HOME/.cargo/env" ]; then
+  # shellcheck disable=SC1091
+  source "$HOME/.cargo/env"
+fi
+
 if ! command -v cargo >/dev/null 2>&1; then
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
     | sh -s -- -y --default-toolchain stable --profile minimal
+  # shellcheck disable=SC1091
+  source "$HOME/.cargo/env"
 fi
-
-# shellcheck disable=SC1091
-source "$HOME/.cargo/env"
 
 if ! rustup target list --installed | grep -q '^wasm32-unknown-unknown$'; then
   rustup target add wasm32-unknown-unknown
@@ -29,4 +33,11 @@ fi
 
 export PATH="$HOME/.cargo/bin:${PATH}"
 
-exec npm run build
+# Vercel (2 vCPU / 8 GB) では LTO 有効時に OOM になりやすい
+if [ "${VERCEL:-}" = "1" ]; then
+  export CARGO_PROFILE_RELEASE_LTO=false
+fi
+
+npm run wasm:build
+npx tsc
+npx vite build

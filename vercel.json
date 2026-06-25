@@ -1,9 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": "dist",
   "installCommand": "npm install",
+  "build": {
+    "env": {
+      "CARGO_PROFILE_RELEASE_LTO": "false"
+    }
+  },
   "headers": [
     {
       "source": "/assets/(.*)\\.wasm",

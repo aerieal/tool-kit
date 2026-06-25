@@ -6,12 +6,11 @@
   "scripts": {
     "wasm:build": "bash scripts/wasm-build.sh",
     "dev": "npm run wasm:build && vite",
-    "build": "npm run wasm:build && tsc && vite build",
-    "preview": "vite preview",
-    "vercel-build": "bash scripts/vercel-build.sh"
+    "build": "bash scripts/vercel-build.sh",
+    "preview": "vite preview"
   },
   "engines": {
-    "node": ">=20"
+    "node": "20.x"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
