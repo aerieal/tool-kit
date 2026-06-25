@@ -4,7 +4,7 @@
   gap: var(--gap-block);
   padding: var(--padding-card);
   background: var(--surface-container-low);
-  border: none;
+  border: 1px solid var(--outline-variant);
   border-radius: var(--shape-lg);
 }
 
@@ -26,7 +26,7 @@
   letter-spacing: 0.03em;
   padding: 0.625rem var(--space-3);
   border: 1px solid var(--outline);
-  border-radius: var(--shape-xs);
+  border-radius: var(--shape-sm);
   background: var(--surface);
   color: var(--on-surface);
   transition:
@@ -45,6 +45,7 @@
   border-color: var(--primary);
   border-width: 2px;
   padding: calc(0.625rem - 1px) calc(var(--space-3) - 1px);
+  border-radius: var(--shape-sm);
   box-shadow: none;
 }
 
@@ -95,7 +96,7 @@
   height: 2.75rem;
   padding: 2px;
   border: 1px solid var(--outline);
-  border-radius: var(--shape-xs);
+  border-radius: var(--shape-sm);
   cursor: pointer;
   background: var(--surface);
 }

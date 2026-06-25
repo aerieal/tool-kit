@@ -18,7 +18,25 @@ fn parse_placeholder_format(s: &str) -> Result<TargetFormat, JsValue> {
     }
 }
 
-const FONT: &[u8] = include_bytes!("../assets/DejaVuSans.ttf");
+const FONT_LATIN: &[u8] = include_bytes!("../assets/DejaVuSans.ttf");
+const FONT_CJK: &[u8] = include_bytes!("../assets/MPLUS1p-Regular.ttf");
+
+fn contains_cjk(text: &str) -> bool {
+    text.chars().any(|c| {
+        matches!(c,
+            '\u{3000}'..='\u{303F}'   // CJK Symbols and Punctuation
+            | '\u{3040}'..='\u{309F}' // Hiragana
+            | '\u{30A0}'..='\u{30FF}' // Katakana
+            | '\u{4E00}'..='\u{9FFF}' // CJK Unified Ideographs
+            | '\u{FF00}'..='\u{FFEF}' // Halfwidth and Fullwidth Forms
+        )
+    })
+}
+
+fn load_font(text: &str) -> Result<FontRef<'_>, JsValue> {
+    let bytes = if contains_cjk(text) { FONT_CJK } else { FONT_LATIN };
+    FontRef::try_from_slice(bytes).map_err(|e| JsValue::from_str(&format!("font: {e}")))
+}
 const MAX_DIMENSION: u32 = 8192;
 
 #[wasm_bindgen]
@@ -44,8 +62,7 @@ pub fn generate_placeholder(
     let fg = parse_hex_color(text_color)?;
     let label = text.unwrap_or_else(|| format!("{width} x {height}"));
 
-    let font =
-        FontRef::try_from_slice(FONT).map_err(|e| JsValue::from_str(&format!("font: {e}")))?;
+    let font = load_font(&label)?;
 
     let mut canvas = RgbaImage::new(width, height);
     draw_filled_rect_mut(

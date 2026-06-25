@@ -28,6 +28,11 @@
   padding: 0 var(--space-2);
 }
 
+.app-sidebar__brand .app-logo {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
 .app-sidebar__brand h1 {
   margin: 0;
   font-size: var(--text-lg);

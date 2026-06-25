@@ -21,3 +21,6 @@ resvg = { version = "0.47", default-features = false, features = ["text", "raste
 [profile.release]
 opt-level = "s"
 lto = true
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false

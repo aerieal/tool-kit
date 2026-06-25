@@ -101,6 +101,11 @@
   gap: var(--gap-block);
 }
 
+.work-section + .work-section {
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--outline-variant);
+}
+
 /* Two-column work area (settings + output) */
 .work-split {
   display: grid;
